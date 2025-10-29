@@ -9,7 +9,8 @@
   <style>
     /* mali stil za centriranje demo stranice */
     body { padding: 18px; }
-    .controls { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+    .controls { display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+    .status { margin-top:8px; color:var(--muted); font-size:13px; }
   </style>
 </head>
 <body>
@@ -20,10 +21,16 @@
 
     <div class="card">
       <div class="controls">
+        <label for="apiUrl">API URL:</label>
+        <input id="apiUrl" type="url" value="/api/shifts" style="min-width:220px;" placeholder="https://example.com/api/shifts" />
+
         <label for="month">Mjesec:</label>
         <input id="month" type="month" value="">
-        <button id="render">Prikaži</button>
+
+        <button id="render">Učitaj i prikaži</button>
       </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
 
       <div class="legend" aria-hidden="false">
         <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-day)"></span> Dnevna</div>
@@ -39,31 +46,62 @@
 
   <script src="./shifts.js"></script>
   <script>
-    // primjer podataka (može doći iz API-ja / backend-a)
-    const sampleShifts = [
+    // fallback sample podaci (koriste se samo ako fetch ne uspije)
+    const fallbackShifts = [
       { date: "2025-11-01", shifts: ["day"] },
       { date: "2025-11-02", shifts: ["night"] },
       { date: "2025-11-03", shifts: ["evening"] },
       { date: "2025-11-04", shifts: ["off"] },
-      { date: "2025-11-05", shifts: ["day","night"] }, // više smjena -> split
+      { date: "2025-11-05", shifts: ["day","night"] },
       { date: "2025-11-06", shifts: ["remote"] }
     ];
 
-    // inicijalno postavi input na nadolazeći mjesec
+    const apiInput = document.getElementById('apiUrl');
     const monthInput = document.getElementById('month');
-    const now = new Date();
-    const isoMonth = now.toISOString().slice(0,7);
-    monthInput.value = isoMonth;
+    const statusEl = document.getElementById('status');
+    const renderBtn = document.getElementById('render');
 
-    // prikaži odmah za taj mjesec
-    document.getElementById('render').addEventListener('click', () => {
+    // inicijalno postavi input na trenutni mjesec
+    const now = new Date();
+    monthInput.value = now.toISOString().slice(0,7);
+
+    async function fetchShifts(apiUrl) {
+      try {
+        statusEl.textContent = 'Učitavanje podataka...';
+        const res = await fetch(apiUrl, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        // očekujemo array objekata {date: 'YYYY-MM-DD', shifts: [...]}
+        if (!Array.isArray(data)) throw new Error('Neispravan format podataka');
+        statusEl.textContent = '';
+        return data;
+      } catch (err) {
+        console.warn('Fetch shifts failed', err);
+        statusEl.textContent = 'Neuspjelo učitavanje podataka, koristi se lokalni primjer.';
+        return fallbackShifts;
+      }
+    }
+
+    renderBtn.addEventListener('click', async () => {
+      const apiUrl = apiInput.value || '/api/shifts';
       const [y, m] = monthInput.value.split('-').map(Number);
-      createMonthCalendar(document.getElementById('calendar'), y, m, sampleShifts);
+      if (!y || !m) {
+        statusEl.textContent = 'Odaberi valjan mjesec.';
+        return;
+      }
+
+      const shifts = await fetchShifts(apiUrl);
+      createMonthCalendar(document.getElementById('calendar'), y, m, shifts);
+      statusEl.textContent = '';
     });
 
-    // renderaj odmah
-    const [y0, m0] = monthInput.value.split('-').map(Number);
-    createMonthCalendar(document.getElementById('calendar'), y0, m0, sampleShifts);
+    // učitaj i prikaži odmah pri otvaranju (pokuša pozvati API, pa fallback ako treba)
+    (async function init() {
+      const apiUrl = apiInput.value || '/api/shifts';
+      const [y0, m0] = monthInput.value.split('-').map(Number);
+      const shifts = await fetchShifts(apiUrl);
+      createMonthCalendar(document.getElementById('calendar'), y0, m0, shifts);
+    })();
   </script>
 </body>
 </html>
