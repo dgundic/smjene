@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Primjer kalendara - smjene</title>
+  <!-- Pretpostavka: koristite style.css iz repozitorija (ili modificiranu verziju s varijablama za boje) -->
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    /* mali stil za centriranje demo stranice */
+    body { padding: 18px; }
+    .controls { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Raspored smjena — demo</h1>
+    </header>
+
+    <div class="card">
+      <div class="controls">
+        <label for="month">Mjesec:</label>
+        <input id="month" type="month" value="">
+        <button id="render">Prikaži</button>
+      </div>
+
+      <div class="legend" aria-hidden="false">
+        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-day)"></span> Dnevna</div>
+        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-night)"></span> Noćna</div>
+        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-evening)"></span> Poslijepodne</div>
+        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-remote)"></span> Remote</div>
+        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-off)"></span> Slobodan</div>
+      </div>
+
+      <div class="calendar" id="calendar"></div>
+    </div>
+  </div>
+
+  <script src="./shifts.js"></script>
+  <script>
+    // primjer podataka (može doći iz API-ja / backend-a)
+    const sampleShifts = [
+      { date: "2025-11-01", shifts: ["day"] },
+      { date: "2025-11-02", shifts: ["night"] },
+      { date: "2025-11-03", shifts: ["evening"] },
+      { date: "2025-11-04", shifts: ["off"] },
+      { date: "2025-11-05", shifts: ["day","night"] }, // više smjena -> split
+      { date: "2025-11-06", shifts: ["remote"] }
+    ];
+
+    // inicijalno postavi input na nadolazeći mjesec
+    const monthInput = document.getElementById('month');
+    const now = new Date();
+    const isoMonth = now.toISOString().slice(0,7);
+    monthInput.value = isoMonth;
+
+    // prikaži odmah za taj mjesec
+    document.getElementById('render').addEventListener('click', () => {
+      const [y, m] = monthInput.value.split('-').map(Number);
+      createMonthCalendar(document.getElementById('calendar'), y, m, sampleShifts);
+    });
+
+    // renderaj odmah
+    const [y0, m0] = monthInput.value.split('-').map(Number);
+    createMonthCalendar(document.getElementById('calendar'), y0, m0, sampleShifts);
+  </script>
+</body>
+</html>
