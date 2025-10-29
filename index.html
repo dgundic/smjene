@@ -12,25 +12,24 @@
 <header>
     <div>
         <h1>Kalkulator smjena</h1>
-        <div class="muted">(za referentni datum upišite neki datum za koji znate kad radite) </div>
+        <div class="muted">-- eksperimentalna verzija (v.001a)-- </div>
     </div>
 </header>
 
 <div class="card">
 <form id="frm" class="grid" onsubmit="return onSubmit(event)">
     <div>
-        <label for="startDate">Referentni datum:</label>
-        <input id="startDate" type="date" required>
+    <label>Odaberi smjenu:</label>
+    <div class="radio-group">
+        <label><input type="radio" name="group" value="A"> A</label>
+        <label><input type="radio" name="group" value="B"> B</label>
+        <label><input type="radio" name="group" value="C" checked> C</label>
+        <label><input type="radio" name="group" value="D"> D</label>
     </div>
-    <div>
-        <label for="startShift">Smjena:</label>
-        <select id="startShift" required>
-            <option value="jutarnja">jutarnja</option>
-            <option value="popodnevna">popodnevna</option>
-            <option value="noćna">noćna</option>
-            <option value="slobodan">slobodan</option>
-        </select>
+    
     </div>
+
+
     <div>
         <label for="targetDate">Traženi datum:</label>
         <input id="targetDate" type="date" required>

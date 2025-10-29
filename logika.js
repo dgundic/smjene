@@ -48,8 +48,17 @@ function hrvatskiDan(d){ return DANI[weekdayIndex(d)]; }
 
 function onSubmit(ev){
     ev.preventDefault();
-    const sD=parseDateInput(document.getElementById('startDate').value);
-    const sShift=document.getElementById('startShift').value;
+    // Fiksni referentni datum
+    const sD = new Date(2025, 8, 16); // 16.09.2025. (mjeseci su 0-indeksirani)
+
+    // Smjena ovisi o odabranoj grupi
+    const selectedGroup = document.querySelector('input[name="group"]:checked').value;
+    let sShift = "jutarnja"; // default
+    if (selectedGroup === "A") sShift = "noćna";
+    else if (selectedGroup === "B") sShift = "slobodan";
+    else if (selectedGroup === "C") sShift = "jutarnja";
+    else if (selectedGroup === "D") sShift = "popodnevna";
+
     const tD=parseDateInput(document.getElementById('targetDate').value);
     const shift = smjena_na_datum(sD,sShift,tD);
     document.getElementById('output').style.display='flex';
