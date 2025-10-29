@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Primjer kalendara - smjene (logika.js)</title>
+  <title>Primjer kalendara - smjene (logika.js, poboljšani prikaz)</title>
   <link rel="stylesheet" href="./style.css">
   <style>
     body { padding: 18px; }
@@ -16,11 +16,11 @@
 <body>
   <div class="container">
     <header>
-      <h1>Raspored smjena — demo (logika.js)</h1>
+      <h1>Raspored smjena — demo (logika.js, poboljšani prikaz)</h1>
     </header>
 
     <div class="card">
-      <form id="frm" class="grid">
+      <form id="frm" class="grid" autocomplete="off">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <label for="startDate">Referentni datum:</label>
           <input id="startDate" type="date" required>
@@ -72,24 +72,15 @@
 
   <script src="./logika.js"></script>
   <script>
-    // Koristimo isključivo logika.js za izračune (smjena_na_datum i pomoćne funkcije)
-
+    // Mapiranje HR -> CSS varijabla
     const SHIFT_KEY_MAP = {
       'jutarnja': 'day',
       'popodnevna': 'evening',
       'noćna': 'night',
-      'slobodan': 'off',
-      'day': 'day', 'evening':'evening','night':'night','off':'off','remote':'remote'
+      'slobodan': 'off'
     };
 
-    function buildSplitGradient(parts){
-      const root = getComputedStyle(document.documentElement);
-      const colors = parts.map(p => root.getPropertyValue(`--shift-${SHIFT_KEY_MAP[p]||p}`) || '#999');
-      const n = colors.length; const size = Math.floor(100/n);
-      const stops = colors.map((c,i)=>`${c} ${i*size}% ${(i+1)*size}%`).join(', ');
-      return `linear-gradient(90deg, ${stops})`;
-    }
-
+    // Poboljšano generiranje DOM kalendara
     function renderImprovedCalendar(container, year, month, referenceStartDate, referenceStartShift){
       container.innerHTML = '';
       const table = document.createElement('table');
@@ -97,15 +88,21 @@
 
       const thead = document.createElement('thead');
       const trh = document.createElement('tr');
-      ["Pon","Uto","Sri","Čet","Pet","Sub","Ned"].forEach(d=>{ const th=document.createElement('th'); th.textContent=d; trh.appendChild(th); });
-      thead.appendChild(trh); table.appendChild(thead);
+      ["Pon","Uto","Sri","Čet","Pet","Sub","Ned"].forEach(d=>{
+        const th=document.createElement('th');
+        th.textContent=d;
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      table.appendChild(thead);
 
       const tbody = document.createElement('tbody');
       const first = new Date(year, month, 1);
       const last = new Date(year, month+1, 0);
       const daysInMonth = last.getDate();
       const firstWeekday = (first.getDay()+6)%7;
-      let dayCounter = 1; const totalCells = Math.ceil((firstWeekday+daysInMonth)/7)*7;
+      let dayCounter = 1;
+      const totalCells = Math.ceil((firstWeekday+daysInMonth)/7)*7;
 
       for(let cell=0; cell<totalCells; cell++){
         if(cell%7===0) { var tr = document.createElement('tr'); tbody.appendChild(tr); }
@@ -113,8 +110,8 @@
         if(cell<firstWeekday || dayCounter>daysInMonth){ tr.appendChild(td); }
         else{
           const d = new Date(year, month, dayCounter);
-          const iso = formatDate(d);
-          const calcShift = smjena_na_datum(referenceStartDate, referenceStartShift, d);
+          const iso = typeof formatDate !== 'undefined' ? formatDate(d) : d.toISOString().slice(0,10);
+          const calcShift = typeof smjena_na_datum !== 'undefined' ? smjena_na_datum(referenceStartDate, referenceStartShift, d) : '';
           const mapped = SHIFT_KEY_MAP[calcShift] || calcShift;
           td.setAttribute('data-shift', mapped);
 
@@ -124,7 +121,7 @@
           td.appendChild(span);
 
           // highlight today if matches
-          const today = new Date(); if(formatDate(d)===formatDate(today)) td.classList.add('today');
+          const today = new Date(); if(formatDate && formatDate(d)===formatDate(today)) td.classList.add('today');
 
           tr.appendChild(td);
           dayCounter++;
@@ -145,13 +142,20 @@
     const calTable = document.getElementById('calTable');
     const out = document.getElementById('output');
 
-    (function fillDefaults(){ const today=new Date(); startDateInput.value = formatDate(today); monthInput.value = today.toISOString().slice(0,7); })();
+    // postavi default vrijednosti
+    (function fillDefaults(){
+      const today=new Date();
+      startDateInput.value = typeof formatDate !== 'undefined' ? formatDate(today) : today.toISOString().slice(0,10);
+      monthInput.value = today.toISOString().slice(0,7);
+    })();
 
     function doRender(){
       const [y,m] = (monthInput.value||'').split('-').map(Number);
-      const refDate = parseDateInput(startDateInput.value);
+      const refDate = typeof parseDateInput !== 'undefined' ? parseDateInput(startDateInput.value) : new Date(startDateInput.value);
       const refShift = startShiftInput.value;
-      if(!refDate || !refShift || !y || !m){ statusEl.textContent='Popuni referentni datum, smjenu i mjesec.'; return; }
+      if(!refDate || !refShift || !y || !m){
+        statusEl.textContent='Popuni referentni datum, smjenu i mjesec.'; return;
+      }
       statusEl.textContent = '';
       calendarWrap.style.display = 'block';
       document.getElementById('calHeader').textContent = `Kalendar: ${["siječanj","veljača","ožujak","travanj","svibanj","lipanj","srpanj","kolovoz","rujan","listopad","studeni","prosinac"][m-1]} ${y}`;
@@ -159,15 +163,20 @@
 
       // show shift for first day of month
       const targetDate = new Date(y, m-1, 1);
-      const outShift = smjena_na_datum(refDate, refShift, targetDate);
-      out.style.display='flex'; document.getElementById('outDate').textContent = formatDate(targetDate);
-      document.getElementById('outDay').textContent = hrvatskiDan(targetDate);
+      const outShift = typeof smjena_na_datum !== 'undefined' ? smjena_na_datum(refDate, refShift, targetDate) : '';
+      out.style.display='flex';
+      document.getElementById('outDate').textContent = typeof formatDate !== 'undefined' ? formatDate(targetDate) : targetDate.toISOString().slice(0,10);
+      document.getElementById('outDay').textContent = typeof hrvatskiDan !== 'undefined' ? hrvatskiDan(targetDate) : '';
       document.getElementById('outShift').textContent = outShift.toUpperCase();
     }
 
-    renderBtn.addEventListener('click', (e)=>{ e.preventDefault(); doRender(); });
+    renderBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      doRender();
+    });
+
     // initial render
-    doRender();
+    window.addEventListener('DOMContentLoaded', doRender);
   </script>
 </body>
 </html>
