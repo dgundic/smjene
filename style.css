@@ -232,50 +232,52 @@ table.cal th {
 
 /* --- VRLO MALI EKRANI (≤400px) --- */
 @media (max-width: 400px) {
-    .calendar {
-        overflow-x: visible; /* uklanja scroll */
-    }
-
     table.cal {
-        display: block;
-        border: 0;
+        font-size: 10px;
     }
 
-    table.cal thead {
-        display: none;
-    }
-
-    table.cal tr {
-        display: block;
-        border: 1px solid rgba(255,255,255,0.04);
-        border-radius: 10px;
-        background: rgba(255,255,255,0.02);
-        margin-bottom: 8px;
-        padding: 8px;
-    }
-
+    table.cal th,
     table.cal td {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border: none;
-        padding: 6px 10px;
-        font-size: 13px;
-    }
-
-    .date-num {
-        position: static;
-        font-size: 14px;
-        font-weight: 600;
+        padding: 4px;
     }
 
     .shift {
-        display: inline-block;
-        margin: 0;
-        padding: 4px 8px;
-        font-size: 12px;
-        border-radius: 6px;
-        background: rgba(6,182,212,0.08);
-        border: 1px solid rgba(6,182,212,0.1);
+        font-size: 9px;
+        margin-top: 20px;
+        padding: 4px 6px;
     }
+
+    .date-num {
+        font-size: 10px;
+    }
+
+    .calendar {
+        overflow-x: auto; /* zadrži horizontalni scroll ako zatreba */
+    }
+}
+/* --- BOJE SMJENA --- */
+.cell.jutarnja {
+    background: rgba(255, 213, 79, 0.18); /* topla žuta */
+    color: #fff9c4;
+}
+
+.cell.popodnevna {
+    background: rgba(100, 181, 246, 0.18); /* svijetloplava */
+    color: #bbdefb;
+}
+
+.cell.noćna {
+    background: rgba(149, 117, 205, 0.18); /* ljubičasta */
+    color: #d1c4e9;
+}
+
+.cell.slobodan {
+    background: rgba(76, 175, 80, 0.18); /* zelena */
+    color: #c8e6c9;
+}
+
+/* dodatno naglasi danasnju ćeliju */
+.cell.today {
+    box-shadow: inset 0 0 0 2px rgba(6,182,212,0.4);
+    background: rgba(6,182,212,0.08);
 }

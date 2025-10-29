@@ -60,13 +60,6 @@ function onSubmit(ev){
     return false;
 }
 
-function fillToday(){
-    const today=new Date();
-    const iso=formatDate(today);
-    document.getElementById('startDate').value=iso;
-    document.getElementById('targetDate').value=iso;
-}
-
 function renderCalendarForMonth(startDate,startShift,targetDate){
     const y=targetDate.getFullYear(), m=targetDate.getMonth();
     document.getElementById('calendarWrap').style.display='block';
@@ -84,7 +77,12 @@ function renderCalendarForMonth(startDate,startShift,targetDate){
         else{
             const d=new Date(y,m,dayCounter);
             const shift=smjena_na_datum(startDate,startShift,d);
-            html+=`<td class="cell${formatDate(d)===formatDate(targetDate)?' today':''}"><span class="date-num">${dayCounter}</span><span class="shift">${shift}</span></td>`;
+            const kratice = { "jutarnja": "J", "popodnevna": "P", "noćna": "N", "slobodan": "S" };
+            html+=`<td class="cell ${shift} ${formatDate(d)===formatDate(targetDate)?' today':''}">
+            <span class="date-num">${dayCounter}</span>
+            <span class="shift">${kratice[shift]}</span>
+            </td>`;
+
             dayCounter++;
         }
         if(c%7===6) html+='</tr>';
