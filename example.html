@@ -3,105 +3,171 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Primjer kalendara - smjene</title>
-  <!-- Pretpostavka: koristite style.css iz repozitorija (ili modificiranu verziju s varijablama za boje) -->
+  <title>Primjer kalendara - smjene (logika.js)</title>
   <link rel="stylesheet" href="./style.css">
   <style>
-    /* mali stil za centriranje demo stranice */
     body { padding: 18px; }
     .controls { display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
     .status { margin-top:8px; color:var(--muted); font-size:13px; }
+    .legend { margin-top:12px; margin-bottom:8px; }
+    .legend__item { font-size:13px; color:var(--muted); }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Raspored smjena — demo</h1>
+      <h1>Raspored smjena — demo (logika.js)</h1>
     </header>
 
     <div class="card">
-      <div class="controls">
-        <label for="apiUrl">API URL:</label>
-        <input id="apiUrl" type="url" value="/api/shifts" style="min-width:220px;" placeholder="https://example.com/api/shifts" />
+      <form id="frm" class="grid" onsubmit="return false;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <label for="startDate">Referentni datum:</label>
+          <input id="startDate" type="date" required>
 
-        <label for="month">Mjesec:</label>
-        <input id="month" type="month" value="">
+          <label for="startShift">Smjena:</label>
+          <select id="startShift" required>
+              <option value="jutarnja">jutarnja</option>
+              <option value="popodnevna">popodnevna</option>
+              <option value="noćna">noćna</option>
+              <option value="slobodan">slobodan</option>
+          </select>
 
-        <button id="render">Učitaj i prikaži</button>
-      </div>
+          <label for="month">Mjesec:</label>
+          <input id="month" type="month" value="">
+
+          <button id="render">Prikaži</button>
+        </div>
+      </form>
 
       <div id="status" class="status" aria-live="polite"></div>
 
       <div class="legend" aria-hidden="false">
-        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-day)"></span> Dnevna</div>
+        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-day)"></span> Jutarnja</div>
+        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-evening)"></span> Popodnevna</div>
         <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-night)"></span> Noćna</div>
-        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-evening)"></span> Poslijepodne</div>
-        <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-remote)"></span> Remote</div>
         <div class="legend__item"><span class="legend__swatch" style="background:var(--shift-off)"></span> Slobodan</div>
       </div>
 
-      <div class="calendar" id="calendar"></div>
+      <div id="output" class="result" aria-live="polite" style="display:none;margin-top:12px;">
+        <div class="pill">
+            <strong>Traženi datum</strong>
+            <span id="outDate" class="big"></span>
+            <div id="outDay" class="muted"></div>
+        </div>
+        <div class="pill">
+            <strong>Smjena na taj datum</strong>
+            <span id="outShift" class="big"></span>
+            <div id="outInfo" class="muted"></div>
+        </div>
+      </div>
+
+      <div id="calendarWrap" class="calendar" style="display:none;margin-top:12px;">
+        <div class="muted" id="calHeader" style="margin-bottom:8px;"></div>
+        <table class="cal" id="calTable" role="grid" aria-label="Kalendar"></table>
+      </div>
+
     </div>
   </div>
 
-  <script src="./shifts.js"></script>
+  <script src="./logika.js"></script>
   <script>
-    // fallback sample podaci (koriste se samo ako fetch ne uspije)
-    const fallbackShifts = [
-      { date: "2025-11-01", shifts: ["day"] },
-      { date: "2025-11-02", shifts: ["night"] },
-      { date: "2025-11-03", shifts: ["evening"] },
-      { date: "2025-11-04", shifts: ["off"] },
-      { date: "2025-11-05", shifts: ["day","night"] },
-      { date: "2025-11-06", shifts: ["remote"] }
-    ];
+    // Koristimo isključivo logika.js za izračune (smjena_na_datum i pomoćne funkcije)
 
-    const apiInput = document.getElementById('apiUrl');
-    const monthInput = document.getElementById('month');
-    const statusEl = document.getElementById('status');
-    const renderBtn = document.getElementById('render');
+    const SHIFT_KEY_MAP = {
+      'jutarnja': 'day',
+      'popodnevna': 'evening',
+      'noćna': 'night',
+      'slobodan': 'off',
+      'day': 'day', 'evening':'evening','night':'night','off':'off','remote':'remote'
+    };
 
-    // inicijalno postavi input na trenutni mjesec
-    const now = new Date();
-    monthInput.value = now.toISOString().slice(0,7);
-
-    async function fetchShifts(apiUrl) {
-      try {
-        statusEl.textContent = 'Učitavanje podataka...';
-        const res = await fetch(apiUrl, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        // očekujemo array objekata {date: 'YYYY-MM-DD', shifts: [...]}
-        if (!Array.isArray(data)) throw new Error('Neispravan format podataka');
-        statusEl.textContent = '';
-        return data;
-      } catch (err) {
-        console.warn('Fetch shifts failed', err);
-        statusEl.textContent = 'Neuspjelo učitavanje podataka, koristi se lokalni primjer.';
-        return fallbackShifts;
-      }
+    function buildSplitGradient(parts){
+      const root = getComputedStyle(document.documentElement);
+      const colors = parts.map(p => root.getPropertyValue(`--shift-${SHIFT_KEY_MAP[p]||p}`) || '#999');
+      const n = colors.length; const size = Math.floor(100/n);
+      const stops = colors.map((c,i)=>`${c} ${i*size}% ${(i+1)*size}%`).join(', ');
+      return `linear-gradient(90deg, ${stops})`;
     }
 
-    renderBtn.addEventListener('click', async () => {
-      const apiUrl = apiInput.value || '/api/shifts';
-      const [y, m] = monthInput.value.split('-').map(Number);
-      if (!y || !m) {
-        statusEl.textContent = 'Odaberi valjan mjesec.';
-        return;
+    function renderImprovedCalendar(container, year, month, referenceStartDate, referenceStartShift){
+      container.innerHTML = '';
+      const table = document.createElement('table');
+      table.className = 'cal';
+
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      ["Pon","Uto","Sri","Čet","Pet","Sub","Ned"].forEach(d=>{ const th=document.createElement('th'); th.textContent=d; trh.appendChild(th); });
+      thead.appendChild(trh); table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month+1, 0);
+      const daysInMonth = last.getDate();
+      const firstWeekday = (first.getDay()+6)%7;
+      let dayCounter = 1; const totalCells = Math.ceil((firstWeekday+daysInMonth)/7)*7;
+
+      for(let cell=0; cell<totalCells; cell++){
+        if(cell%7===0) { var tr = document.createElement('tr'); tbody.appendChild(tr); }
+        const td = document.createElement('td'); td.className='cell';
+        if(cell<firstWeekday || dayCounter>daysInMonth){ tr.appendChild(td); }
+        else{
+          const d = new Date(year, month, dayCounter);
+          const iso = formatDate(d);
+          const calcShift = smjena_na_datum(referenceStartDate, referenceStartShift, d);
+          const mapped = SHIFT_KEY_MAP[calcShift] || calcShift;
+          td.setAttribute('data-shift', mapped);
+
+          const spanDate = document.createElement('span'); spanDate.className='date-num'; spanDate.textContent=dayCounter;
+          td.appendChild(spanDate);
+          const span = document.createElement('span'); span.className='shift'; span.textContent = calcShift;
+          td.appendChild(span);
+
+          // highlight today if matches
+          const today = new Date(); if(formatDate(d)===formatDate(today)) td.classList.add('today');
+
+          tr.appendChild(td);
+          dayCounter++;
+        }
       }
 
-      const shifts = await fetchShifts(apiUrl);
-      createMonthCalendar(document.getElementById('calendar'), y, m, shifts);
-      statusEl.textContent = '';
-    });
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
 
-    // učitaj i prikaži odmah pri otvaranju (pokuša pozvati API, pa fallback ako treba)
-    (async function init() {
-      const apiUrl = apiInput.value || '/api/shifts';
-      const [y0, m0] = monthInput.value.split('-').map(Number);
-      const shifts = await fetchShifts(apiUrl);
-      createMonthCalendar(document.getElementById('calendar'), y0, m0, shifts);
-    })();
+    // bindings
+    const monthInput = document.getElementById('month');
+    const startDateInput = document.getElementById('startDate');
+    const startShiftInput = document.getElementById('startShift');
+    const renderBtn = document.getElementById('render');
+    const statusEl = document.getElementById('status');
+    const calendarWrap = document.getElementById('calendarWrap');
+    const calTable = document.getElementById('calTable');
+    const out = document.getElementById('output');
+
+    (function fillDefaults(){ const today=new Date(); startDateInput.value = formatDate(today); monthInput.value = today.toISOString().slice(0,7); })();
+
+    function doRender(){
+      const [y,m] = (monthInput.value||'').split('-').map(Number);
+      const refDate = parseDateInput(startDateInput.value);
+      const refShift = startShiftInput.value;
+      if(!refDate || !refShift || !y || !m){ statusEl.textContent='Popuni referentni datum, smjenu i mjesec.'; return; }
+      statusEl.textContent = '';
+      calendarWrap.style.display = 'block';
+      document.getElementById('calHeader').textContent = `Kalendar: ${["siječanj","veljača","ožujak","travanj","svibanj","lipanj","srpanj","kolovoz","rujan","listopad","studeni","prosinac"][m-1]} ${y}`;
+      renderImprovedCalendar(calTable, y, m-1, refDate, refShift);
+
+      // show shift for first day of month
+      const targetDate = new Date(y, m-1, 1);
+      const outShift = smjena_na_datum(refDate, refShift, targetDate);
+      out.style.display='flex'; document.getElementById('outDate').textContent = formatDate(targetDate);
+      document.getElementById('outDay').textContent = hrvatskiDan(targetDate);
+      document.getElementById('outShift').textContent = outShift.toUpperCase();
+    }
+
+    renderBtn.addEventListener('click', (e)=>{ e.preventDefault(); doRender(); });
+    // initial render
+    doRender();
   </script>
 </body>
 </html>
