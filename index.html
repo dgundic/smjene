@@ -1,0 +1,72 @@
+
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Kalkulator smjena</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+<header>
+    <div>
+        <h1>Kalkulator smjena</h1>
+        <div class="muted">(za referentni datum upišite neki datum za koji znate kad radite) </div>
+    </div>
+</header>
+
+<div class="card">
+<form id="frm" class="grid" onsubmit="return onSubmit(event)">
+    <div>
+        <label for="startDate">Referentni datum:</label>
+        <input id="startDate" type="date" required>
+    </div>
+    <div>
+        <label for="startShift">Smjena:</label>
+        <select id="startShift" required>
+            <option value="jutarnja">jutarnja</option>
+            <option value="popodnevna">popodnevna</option>
+            <option value="noćna">noćna</option>
+            <option value="slobodan">slobodan</option>
+        </select>
+    </div>
+    <div>
+        <label for="targetDate">Traženi datum:</label>
+        <input id="targetDate" type="date" required>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <button type="submit">Izračunaj</button>
+        
+    </div>
+</form>
+
+<div id="output" class="result" aria-live="polite" style="display:none;">
+    <div class="pill">
+        <strong>Traženi datum</strong>
+        <span id="outDate" class="big"></span>
+        <div id="outDay" class="muted"></div>
+    </div>
+    <div class="pill">
+        <strong>Smjena na taj datum</strong>
+        <span id="outShift" class="big"></span>
+        <div id="outInfo" class="muted"></div>
+    </div>
+</div>
+
+<div id="calendarWrap" class="calendar" style="display:none;">
+    <div class="muted" id="calHeader" style="margin-bottom:8px;"></div>
+    <table class="cal" id="calTable" role="grid" aria-label="Kalendar"></table>
+</div>
+
+</div>
+
+<footer class="muted">
+    Autor: <b>Danijel Gundić</b> @ 2025
+</footer>
+</div>
+
+<!-- Učitavanje JS logike -->
+<script src="logika.js"></script>
+</body>
+</html>
