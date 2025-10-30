@@ -22,24 +22,29 @@ function daysBetweenInclusive(start,end){
 }
 
 function broj_prelazaka_grupa(poc, cilj){
-    if(cilj<poc) throw "Ciljni datum prije početnog!";
-    const ukupno = daysBetweenInclusive(poc, cilj);
-    const pune = Math.floor(ukupno/7);
-    let prelazi = pune*3;
-    let start = new Date(poc); start.setDate(start.getDate()+pune*7);
-    let prev = grupa_dana(start);
-    let cur = new Date(start);
-    for(let i=0;i<ukupno%7;i++){
-        cur.setDate(cur.getDate()+1);
-        const g = grupa_dana(cur);
-        if(g!==prev){ prelazi++; prev=g; }
-    }
-    return prelazi;
-}
+    // Omogućuje računanje i unazad
+    const smjer = cilj >= poc ? 1 : -1;
+    const start = smjer === 1 ? poc : cilj;
+    const end = smjer === 1 ? cilj : poc;
 
+    const ukupno = daysBetweenInclusive(start, end);
+    const pune = Math.floor(ukupno / 7);
+    let prelazi = pune * 3;
+    let cur = new Date(start);
+    let prev = grupa_dana(cur);
+
+    for (let i = 0; i < ukupno % 7; i++) {
+        cur.setDate(cur.getDate() + 1);
+        const g = grupa_dana(cur);
+        if (g !== prev) { prelazi++; prev = g; }
+    }
+    return prelazi * smjer;
+}
 function smjena_na_datum(poc, pocShift, cilj){
     const startIdx = SMJENE.indexOf(pocShift);
-    const idx = (startIdx + broj_prelazaka_grupa(poc, cilj)) % SMJENE.length;
+    const pomak = broj_prelazaka_grupa(poc, cilj);
+    const duljina = SMJENE.length;
+    const idx = ((startIdx + pomak) % duljina + duljina) % duljina; // ispravno za negativne vrijednosti
     return SMJENE[idx];
 }
 
@@ -48,8 +53,9 @@ function hrvatskiDan(d){ return DANI[weekdayIndex(d)]; }
 
 function onSubmit(ev){
     ev.preventDefault();
+
     // Fiksni referentni datum
-    const sD = new Date(2025, 8, 16); // 16.09.2025. (mjeseci su 0-indeksirani)
+    const sD = new Date(2025, 8, 16); // 16.09.2025.
 
     // Smjena ovisi o odabranoj grupi
     const selectedGroup = document.querySelector('input[name="group"]:checked').value;
@@ -59,13 +65,21 @@ function onSubmit(ev){
     else if (selectedGroup === "C") sShift = "jutarnja";
     else if (selectedGroup === "D") sShift = "popodnevna";
 
-    const tD=parseDateInput(document.getElementById('targetDate').value);
-    const shift = smjena_na_datum(sD,sShift,tD);
-    document.getElementById('output').style.display='flex';
-    document.getElementById('outDate').textContent=formatDate(tD);
-    document.getElementById('outDay').textContent=hrvatskiDan(tD);
-    document.getElementById('outShift').textContent=shift.toUpperCase();
-    renderCalendarForMonth(sD,sShift,tD);
+    const tInput = document.getElementById("targetDate");
+    if (!tInput.value) {
+        alert("Molim odaberi valjani datum.");
+        return false;
+    }
+
+    const tD = parseDateInput(tInput.value);
+    const shift = smjena_na_datum(sD, sShift, tD);
+
+    document.getElementById("output").style.display = "flex";
+    document.getElementById("outDate").textContent = formatDate(tD);
+    document.getElementById("outDay").textContent = hrvatskiDan(tD);
+    document.getElementById("outShift").textContent = shift.toUpperCase();
+
+    renderCalendarForMonth(sD, sShift, tD);
     return false;
 }
 
