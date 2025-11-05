@@ -55,17 +55,21 @@ form.grid {
 }
 
 form.grid > div:last-child {
-    grid-column: 1 / -1; /* gumb zauzima cijeli red ako nema mjesta */
+    grid-column: auto; /* ukloni širenje preko cijelog reda */
     display: flex;
-    justify-content: center; /* centrira gumb */
+    justify-content: start; /* možeš staviti center ako želiš centrirati */
 }
 
 form.grid > div:last-child button {
-    width: auto; /* automatska širina */
+    width: 100%;      /* zauzima cijelu širinu roditeljskog diva */
+    min-width: 260px; /* isto kao input polja u gridu */
+    max-width: 100%;  /* dozvoli širenje prema grid-u */
     padding: 10px 20px;
-    min-width: 120px;
     box-sizing: border-box;
 }
+
+
+
 
 label { 
     display: block; 
@@ -94,6 +98,17 @@ button {
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 6px 16px rgba(6,182,212,0.16);
+    transition: all 0.25s ease;
+}
+
+button:hover {
+    background: #1de9b6;
+    box-shadow: 0 0 14px rgba(29, 233, 182, 0.6);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: scale(0.98);
 }
 
 .result { 
@@ -135,11 +150,24 @@ footer {
     font-size: 13px; 
 }
 
+/* --- NADOGRADNJA: izgled linka na autora --- */
+footer a {
+    color: #00e5ff;
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(0,229,255,0.6);
+    transition: color 0.2s ease, border-bottom-color 0.2s ease;
+}
+
+footer a:hover {
+    color: #1de9b6;
+    border-bottom-color: rgba(29,233,182,0.8);
+}
+
 /* --- KALENDAR --- */
 .calendar {
     margin-top: 18px;
     width: 100%;
-    overflow-x: auto; /* horizontalni scroll po potrebi */
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -147,7 +175,7 @@ table.cal {
     width: 100%;
     border-collapse: collapse;
     background: transparent;
-    table-layout: auto;
+    table-layout: fixed; /* fiksna širina kolona */
 }
 
 table.cal th,
@@ -156,7 +184,8 @@ table.cal td {
     text-align: center;
     border: 1px solid rgba(255,255,255,0.03);
     font-size: 13px;
-    width: auto;
+    width: 14.285%; /* 100% / 7 dana */
+    box-sizing: border-box;
 }
 
 table.cal th { 
@@ -167,120 +196,50 @@ table.cal th {
 .cell { 
     min-height: 60px; 
     vertical-align: top; 
-    position: relative; 
+    position: relative;
+    padding-top: 20px;
 }
 
 .date-num { 
     position: absolute; 
-    top: 6px; 
+    top: 4px;
     left: 6px; 
     font-weight: 700; 
     font-size: 12px; 
 }
 
-.shift { 
-    display: block; 
-    margin-top: 28px; 
-    font-size: 12px; 
-    padding: 6px 8px; 
-    border-radius: 6px; 
-    background: rgba(255,255,255,0.02); 
-    border: 1px solid rgba(255,255,255,0.02);
+/* --- Oznake smjena --- */
+.cell .shift {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 32px;
+    padding: 10px 0;
+    font-weight: 600;
+    border-radius: 6px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+    letter-spacing: 0.3px;
 }
 
-.today { 
-    box-shadow: inset 0 0 0 2px rgba(6,182,212,0.12); 
-    background: linear-gradient(180deg, rgba(6,182,212,0.03), rgba(6,182,212,0.01)); 
-}
+/* --- Pastelne boje ćelija i kontrast oznaka smjena --- */
+.cell.jutarnja { background: rgba(255, 221, 100, 0.12); }
+.cell.popodnevna { background: rgba(120, 190, 255, 0.12); }
+.cell.noćna { background: rgba(170, 130, 230, 0.12); }
+.cell.slobodan { background: rgba(130, 210, 150, 0.12); }
 
-/* --- MOBILNI PRIKAZ (≤640px) --- */
-@media (max-width: 640px) {
-    form.grid {
-        grid-template-columns: 1fr; /* svi elementi u jednom stupcu */
-        gap: 10px;
-    }
+.cell.jutarnja .shift { background: rgba(255, 221, 100, 0.22); color: #fff4b2; text-shadow: 0 1px 3px rgba(0,0,0,0.55);}
+.cell.popodnevna .shift { background: rgba(120, 190, 255, 0.22); color: #e6f5ff; text-shadow: 0 1px 3px rgba(0,0,0,0.55);}
+.cell.noćna .shift { background: rgba(170, 130, 230, 0.22); color: #f1e6ff; text-shadow: 0 1px 3px rgba(0,0,0,0.55);}
+.cell.slobodan .shift { background: rgba(130, 210, 150, 0.22); color: #e8ffec; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 
-    form.grid > div:last-child {
-        justify-content: stretch; /* gumb full width */
-    }
-
-    form.grid > div:last-child button {
-        width: 100%;
-        min-width: unset;
-        padding: 10px 14px;
-    }
-
-    table.cal {
-        font-size: 12px;
-        min-width: unset;
-    }
-
-    table.cal th,
-    table.cal td {
-        padding: 6px;
-    }
-
-    .shift {
-        font-size: 11px;
-        margin-top: 24px;
-    }
-
-    .date-num {
-        font-size: 11px;
-    }
-}
-
-/* --- VRLO MALI EKRANI (≤400px) --- */
-@media (max-width: 400px) {
-    table.cal {
-        font-size: 10px;
-    }
-
-    table.cal th,
-    table.cal td {
-        padding: 4px;
-    }
-
-    .shift {
-        font-size: 9px;
-        margin-top: 20px;
-        padding: 4px 6px;
-    }
-
-    .date-num {
-        font-size: 10px;
-    }
-
-    .calendar {
-        overflow-x: auto; /* zadrži horizontalni scroll ako zatreba */
-    }
-}
-/* --- BOJE SMJENA --- */
-.cell.jutarnja {
-    background: rgba(255, 213, 79, 0.18); /* topla žuta */
-    color: #fff9c4;
-}
-
-.cell.popodnevna {
-    background: rgba(100, 181, 246, 0.18); /* svijetloplava */
-    color: #bbdefb;
-}
-
-.cell.noćna {
-    background: rgba(149, 117, 205, 0.18); /* ljubičasta */
-    color: #d1c4e9;
-}
-
-.cell.slobodan {
-    background: rgba(76, 175, 80, 0.18); /* zelena */
-    color: #c8e6c9;
-}
-
-/* dodatno naglasi danasnju ćeliju */
-.cell.today {
-    box-shadow: inset 0 0 0 2px rgba(6,182,212,0.4);
+/* Dodatno naglašavanje današnjeg dana */
+.cell.today { 
+    box-shadow: inset 0 0 0 2px rgba(6,182,212,0.4), 0 0 8px rgba(6,182,212,0.25);
     background: rgba(6,182,212,0.08);
+    display: table-cell; /* osigurava da širina prati ostale */
 }
+
+/* --- STILIZACIJA RADIO BUTTONA --- */
 .radio-group {
     display: flex;
     gap: 18px;
@@ -293,17 +252,61 @@ table.cal th {
     color: #e6eef6;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px; /* malo više prostora između kruga i slova */
     cursor: pointer;
 }
 
 .radio-group input[type="radio"] {
-    accent-color: var(--accent);
-    transform: scale(1.1);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.03);
     cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
 }
 
-.small-note {
-    font-size: 12px;
-    margin-top: 4px;
+.radio-group input[type="radio"]:hover {
+    border-color: #1de9b6;
+    background-color: rgba(29,233,182,0.1);
+}
+
+.radio-group input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--accent);
+}
+
+.radio-group input[type="radio"]:checked:hover::after {
+    background-color: #1de9b6;
+}
+
+
+/* --- RESPONSIVNOST --- */
+@media (max-width: 640px) {
+    form.grid { grid-template-columns: 1fr; gap: 10px; }
+    form.grid > div:last-child { justify-content: stretch; }
+    form.grid > div:last-child button { width: 100%; min-width: unset; padding: 10px 14px; }
+
+    table.cal { font-size: 12px; min-width: unset; }
+    table.cal th, table.cal td { padding: 6px; }
+    .shift { font-size: 11px; margin-top: 24px; }
+    .date-num { font-size: 11px; }
+}
+
+@media (max-width: 400px) {
+    table.cal { font-size: 10px; }
+    table.cal th, table.cal td { padding: 4px; }
+    .shift { font-size: 9px; margin-top: 20px; padding: 4px 6px; }
+    .date-num { font-size: 10px; }
+    .calendar { overflow-x: auto; }
 }
