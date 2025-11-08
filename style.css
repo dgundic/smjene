@@ -35,6 +35,12 @@ header h1 {
     letter-spacing: -0.2px; 
 }
 
+div#naslov {
+    display: flex; 
+    flex-direction: column;   /* slaže h1 i .muted jedan ispod drugog */
+    align-items: center;      /* centrira ih vodoravno */
+}
+
 .card {
     background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
     border: 1px solid rgba(255,255,255,0.04);
@@ -83,7 +89,7 @@ input[type="date"], select {
     max-width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.7);
     background: var(--glass);
     color: inherit;
     font-size: 14px;
@@ -170,6 +176,9 @@ footer a:hover {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
+#calHeader strong {
+    text-transform: capitalize;
+}
 
 table.cal {
     width: 100%;
@@ -193,12 +202,15 @@ table.cal th {
     color: var(--muted); 
 }
 
-.cell { 
-    min-height: 60px; 
-    vertical-align: top; 
+.cell {
+    min-height: 60px;
+    vertical-align: top;
     position: relative;
     padding-top: 20px;
+    border: 1px solid rgba(255,255,255,0.05); /* suptilan obrub */
+    background-clip: padding-box; /* sprječava da obrub potamni rubne tonove */
 }
+
 
 .date-num { 
     position: absolute; 
@@ -231,13 +243,13 @@ table.cal th {
 .cell.popodnevna .shift { background: rgba(120, 190, 255, 0.22); color: #e6f5ff; text-shadow: 0 1px 3px rgba(0,0,0,0.55);}
 .cell.noćna .shift { background: rgba(170, 130, 230, 0.22); color: #f1e6ff; text-shadow: 0 1px 3px rgba(0,0,0,0.55);}
 .cell.slobodan .shift { background: rgba(130, 210, 150, 0.22); color: #e8ffec; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-
-/* Dodatno naglašavanje današnjeg dana */
 .cell.today { 
-    box-shadow: inset 0 0 0 2px rgba(6,182,212,0.4), 0 0 8px rgba(6,182,212,0.25);
-    background: rgba(6,182,212,0.08);
-    display: table-cell; /* osigurava da širina prati ostale */
+    border: 2px solid rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.08);
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    display: table-cell;
 }
+
 
 /* --- STILIZACIJA RADIO BUTTONA --- */
 .radio-group {

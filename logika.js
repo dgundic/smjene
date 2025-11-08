@@ -75,7 +75,7 @@ function onSubmit(ev){
     const shift = smjena_na_datum(sD, sShift, tD);
 
     document.getElementById("output").style.display = "flex";
-    document.getElementById("outDate").textContent = formatDate(tD);
+    document.getElementById("outDate").textContent = tD.toLocaleDateString("hr-HR");
     document.getElementById("outDay").textContent = hrvatskiDan(tD);
     document.getElementById("outShift").textContent = shift.toUpperCase();
 
@@ -83,33 +83,46 @@ function onSubmit(ev){
     return false;
 }
 
-function renderCalendarForMonth(startDate,startShift,targetDate){
-    const y=targetDate.getFullYear(), m=targetDate.getMonth();
-    document.getElementById('calendarWrap').style.display='block';
-    document.getElementById('calHeader').textContent=`Kalendar: ${["siječanj","veljača","ožujak","travanj","svibanj","lipanj","srpanj","kolovoz","rujan","listopad","studeni","prosinac"][m]} ${y}`;
-    const first=new Date(y,m,1), last=new Date(y,m+1,0), daysInMonth=last.getDate();
-    let firstWeekday = weekdayIndex(first);
-    let totalCells = Math.ceil((firstWeekday+daysInMonth)/7)*7;
-    let html='<thead><tr>';
-    ["Pon","Uto","Sri","Čet","Pet","Sub","Ned"].forEach(d=>html+=`<th>${d}</th>`);
-    html+='</tr></thead><tbody>';
-    let dayCounter=1;
-    for(let c=0;c<totalCells;c++){
-        if(c%7===0) html+='<tr>';
-        if(c<firstWeekday || dayCounter>daysInMonth){ html+='<td class="cell"></td>'; }
-        else{
-            const d=new Date(y,m,dayCounter);
-            const shift=smjena_na_datum(startDate,startShift,d);
-            const kratice = { "jutarnja": "J", "popodnevna": "P", "noćna": "N", "slobodan": "S" };
-            html+=`<td class="cell ${shift} ${formatDate(d)===formatDate(targetDate)?' today':''}">
-            <span class="date-num">${dayCounter}</span>
-            <span class="shift">${kratice[shift]}</span>
-            </td>`;
+function renderCalendarForMonth(startDate, startShift, targetDate) {
+    const y = targetDate.getFullYear(),
+          m = targetDate.getMonth();
 
+    const mjeseci = [
+        "siječanj", "veljača", "ožujak", "travanj", "svibanj", "lipanj",
+        "srpanj", "kolovoz", "rujan", "listopad", "studeni", "prosinac"
+    ];
+
+    document.getElementById('calendarWrap').style.display = 'block';
+    document.getElementById('calHeader').innerHTML = 
+        `Kalendar: <strong>${mjeseci[m]}</strong> ${y}`;
+    
+    const first = new Date(y, m, 1),
+          last = new Date(y, m + 1, 0),
+          daysInMonth = last.getDate();
+    let firstWeekday = weekdayIndex(first);
+    let totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+    let html = '<thead><tr>';
+    ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"].forEach(d => html += `<th>${d}</th>`);
+    html += '</tr></thead><tbody>';
+    let dayCounter = 1;
+
+    for (let c = 0; c < totalCells; c++) {
+        if (c % 7 === 0) html += '<tr>';
+        if (c < firstWeekday || dayCounter > daysInMonth) {
+            html += '<td class="cell"></td>';
+        } else {
+            const d = new Date(y, m, dayCounter);
+            const shift = smjena_na_datum(startDate, startShift, d);
+            const kratice = { "jutarnja": "J", "popodnevna": "P", "noćna": "N", "slobodan": "S" };
+            html += `<td class="cell ${shift} ${formatDate(d) === formatDate(targetDate) ? ' today' : ''}">
+                        <span class="date-num">${dayCounter}</span>
+                        <span class="shift">${kratice[shift]}</span>
+                     </td>`;
             dayCounter++;
         }
-        if(c%7===6) html+='</tr>';
+        if (c % 7 === 6) html += '</tr>';
     }
-    html+='</tbody>';
-    document.getElementById('calTable').innerHTML=html;
+    html += '</tbody>';
+    document.getElementById('calTable').innerHTML = html;
 }
+

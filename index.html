@@ -11,9 +11,9 @@
 <body>
 <div class="container">
 <header>
-    <div>
+    <div id="naslov">
         <h1>Kalkulator smjena</h1>
-        <div class="muted">-- eksperimentalna verzija (v.001a)-- </div>
+        <div class="muted">-- eksperimentalna verzija (v.002a)-- </div>
     </div>
 </header>
 
@@ -32,7 +32,7 @@
 
 
     <div>
-        <label for="targetDate">Traženi datum:</label>
+        <label for="targetDate">Odaberi datum:</label>
         <input id="targetDate" type="date" required>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -43,12 +43,12 @@
 
 <div id="output" class="result" aria-live="polite" style="display:none;">
     <div class="pill">
-        <strong>Traženi datum</strong>
+        <strong>Traženi datum:</strong>
         <span id="outDate" class="big"></span>
         <div id="outDay" class="muted"></div>
     </div>
     <div class="pill">
-        <strong>Smjena na taj datum</strong>
+        <strong>Smjena na taj datum:</strong>
         <span id="outShift" class="big"></span>
         <div id="outInfo" class="muted"></div>
     </div>
